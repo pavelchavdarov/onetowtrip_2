@@ -11,7 +11,7 @@ import java.util.logging.Logger;
 /**
  * Created by p.chavdarov on 28/12/2016.
  */
-public class Connection4DB implements ConnectionInterface {
+public class Connection4DB extends Connection implements ConnectionInterface{
 
     private HttpsURLConnection conn;
     private Proxy proxy;
@@ -58,38 +58,4 @@ public class Connection4DB implements ConnectionInterface {
         return null;
     }
 
-    @Override
-    public int sendData(String pData) throws IOException{
-        if (conn == null)
-            return 1;
-        OutputStreamWriter outstrean = new OutputStreamWriter (conn.getOutputStream ());
-        BufferedWriter wr = new BufferedWriter (outstrean);
-        wr.write(pData);
-        wr.flush();
-
-
-
-        return 0; //conn.getResponseCode();
-
-    }
-
-    @Override
-    public String getData() throws IOException{
-        String result="";
-        String inputLine;
-
-        if (conn != null) {
-            try{
-                InputStreamReader instrean = new InputStreamReader(conn.getInputStream());
-                BufferedReader in = new BufferedReader(instrean);
-                while ((inputLine = in.readLine()) != null) {
-                    result += inputLine;
-                }
-            } catch (IOException ex) {
-                System.out.println(ex);
-            }
-
-        }
-        return result;
-    }
 }

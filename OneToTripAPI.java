@@ -6,6 +6,7 @@
 package onetowtrip;
 
 import java.io.IOException;
+import java.sql.DriverManager;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -41,7 +42,8 @@ public class OneToTripAPI {
         java.sql.Array arr = oraConn.createARRAY(typeName.toUpperCase(), elements);
         return arr;
     }
-    
+
+    // Регистрация клиента
     public static String registerUsers(String uid) throws Exception{
         if (conn == null)
             init();
@@ -76,14 +78,15 @@ public class OneToTripAPI {
         else return "EMPTY_RESULT";
     }
 
-
-    public static String addFunds(java.sql.Array bonusToCharge) throws SQLException {
+    // Массовое начисление
+    public static java.sql.Array addFunds(java.sql.Array bonusToCharge) throws SQLException {
         if (conn == null || gson ==null)
             init();
         conn.initConnection("https://api.twiket.com/mt/addFunds", "POST", System.getProperty("ott_login"), System.getProperty("ott_password"));
         BonusAddRequest charge = new  BonusAddRequest();
         String[] bonuses = (String[])bonusToCharge.getArray();
         for (int i =0; i< bonuses.length; i++){
+            System.out.println("adding fund: " + bonuses[i]);
             String[] recs = bonuses[i].split("#");
 
             BonusRequest bonus_req = new BonusRequest();
@@ -96,7 +99,7 @@ public class OneToTripAPI {
         }
 
         request = gson.toJson(charge, BonusAddRequest.class);
-
+        System.out.println(request);
         try {
             conn.sendData(request);
         } catch (IOException ex) {
@@ -109,17 +112,77 @@ public class OneToTripAPI {
         }
         System.out.println("answer: " + answer);
         if (answer.length() >0){
-            BonusResponce bonusResp = gson.fromJson(answer, BonusAddResponce.class).getBonuses().get(0);
+            String resp_str = "";
+            BonusAddResponce bonusResp = gson.fromJson(answer, BonusAddResponce.class);
+            ArrayList<String> resp_list = new ArrayList<String>();
+            for (BonusResponce resp : bonusResp.getBonuses()){
+                resp_str =  resp.getUid() + "#" + resp.getOperId() + "#" + (resp.getSuccess()?"SUCCESS":resp.getError());
+                System.out.println(resp_str);
+                resp_list.add(resp_str);
+            }
+
+            String[] resp_arr = (String[])resp_list.toArray();
+
+            DriverManager.registerDriver (new oracle.jdbc.OracleDriver());
+            java.sql.Connection conn = DriverManager.getConnection("jdbc:oracle:thin:IBS/Pustobreh1937@//test03.msk.russb.org:1521/rbotest8.msk.russb.org");
+            oracle.jdbc.OracleConnection oraConn = (oracle.jdbc.OracleConnection)conn;
+
+            java.sql.Array arr = oraConn.createARRAY("OTT_BONUS_SERIAL".toUpperCase(), resp_arr);
+
+            return arr;
 //            System.out.println("uid: " + bonusResponse.getBonuses().get(0).getUid());
 //            System.out.println("success: " + bonusResponse.getBonuses().get(0).getSuccess());
 //            System.out.println("error: " + bonusResponse.getBonuses().get(0).getError());
+
+//            if (bonusResp.getSuccess())
+//                return "SUCCESS";
+//            else
+//                return bonusResp.getError();
+        }
+
+        return null;
+    }
+
+    // Одинарное начисление
+    public static String addFund(String pUID, Integer pAmount, String pOperId, String pDesc) throws SQLException {
+        if (conn == null || gson ==null)
+            init();
+        conn.initConnection("https://api.twiket.com/mt/addFunds", "POST", System.getProperty("ott_login"), System.getProperty("ott_password"));
+        BonusAddRequest charge = new  BonusAddRequest();
+        BonusRequest bonus_req = new BonusRequest();
+        bonus_req.setUid(pUID);
+        bonus_req.setAmount(pAmount);
+        bonus_req.setOperId(pOperId);
+        bonus_req.setDesc(pDesc);
+
+        charge.bonuses.add(bonus_req);
+
+        request = gson.toJson(charge, BonusAddRequest.class);
+        System.out.println(request);
+        try {
+            conn.sendData(request);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        try {
+            answer = conn.getData();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("answer: " + answer);
+        if (answer.length() >0){
+            String resp_str = "";
+            BonusAddResponce bonusAddResp = gson.fromJson(answer, BonusAddResponce.class);
+            BonusResponce bonusResp = bonusAddResp.getBonuses().get(0);
 
             if (bonusResp.getSuccess())
                 return "SUCCESS";
             else
                 return bonusResp.getError();
         }
-
-        return "EMPTY_RESULT";
+        else
+            return null;
     }
+
+
 }
