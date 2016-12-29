@@ -6,19 +6,19 @@ import java.util.ArrayList;
  * Created by p.chavdarov on 26/12/2016.
  */
 public class BonusAddResponce {
-    private ArrayList<BonusResponce> bonuses;
+    protected ArrayList<BonusResponce> bonuses;
 
     public BonusAddResponce() {
         bonuses = new ArrayList<BonusResponce>();
     }
 
-    public ArrayList<BonusResponce> getBonuses() {
-        return bonuses;
-    }
+//    public ArrayList<BonusResponce> getBonuses() {
+//        return bonuses;
+//    }
 
-    public void setBonuses(ArrayList<BonusResponce> bonuses) {
-        this.bonuses = bonuses;
-    }
+//    public void setBonuses(ArrayList<BonusResponce> bonuses) {
+//        this.bonuses = bonuses;
+//    }
 }
 
 class BonusResponce extends BonusRequest {

@@ -58,4 +58,8 @@ public class Connection4DB extends Connection implements ConnectionInterface{
         return null;
     }
 
+    public String getResponseCode() throws IOException {
+        return String.valueOf(conn.getResponseCode());
+    }
+
 }

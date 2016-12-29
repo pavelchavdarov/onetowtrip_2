@@ -11,8 +11,12 @@ import java.util.ArrayList;
  *
  * @author p.chavdarov
  */
-public class BonusMoves {
-    ArrayList<BonusMovement> movements;
+public class BonusMovements {
+    protected ArrayList<BonusMovement> movements;
+
+    public BonusMovements() {
+        movements = new ArrayList<BonusMovement>();
+    }
 }
 
 class BonusMovement{

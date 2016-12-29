@@ -42,8 +42,8 @@ public class Connection implements ConnectionInterface{
         String encoded = Base64.encodeBase64String((pLogin + ":" + pPassword).getBytes());
 
         // пока заглушка
-//        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.95.17.46", 8080));
-        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.95.5.19", 8888));
+        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.95.17.46", 8080));
+//        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.95.5.19", 8888));
         try{
                 url = new URL(pUrl);
         }catch(MalformedURLException mx){
@@ -121,5 +121,9 @@ public class Connection implements ConnectionInterface{
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
         }
         return fileName;
+    }
+
+    public String getResponseCode() throws IOException {
+        return String.valueOf(conn.getResponseCode());
     }
 }

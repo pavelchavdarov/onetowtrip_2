@@ -94,7 +94,7 @@ public class OneTowTrip {
        
 //       conn.initConnection("https://api.twiket.com/mt/newMovements", "GET", "api@rgsbank", "fhoouihfhoouih");
 //
-//       BonusMoves b_moves = new BonusMoves();
+//       BonusMovements b_moves = new BonusMovements();
 //
 //       try {
 //            answer = conn.getData();
@@ -103,7 +103,7 @@ public class OneTowTrip {
 //        }
 //       System.out.println(answer);
 //       if (answer.length() >0){
-//           b_moves = gson.fromJson(answer, BonusMoves.class);
+//           b_moves = gson.fromJson(answer, BonusMovements.class);
 //           for (BonusMovement i : b_moves.movements){
 //               System.out.println("movId: "+ i.getMovId());
 //               System.out.println("uid: "+ i.getUid());

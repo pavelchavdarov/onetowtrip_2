@@ -6,13 +6,11 @@
 package onetowtrip;
 
 import java.io.IOException;
-import java.sql.DriverManager;
+import java.sql.*;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import com.google.gson.Gson;
+import oracle.jdbc.OracleConnection;
 
-import java.sql.SQLException;
 
 /**
  *
@@ -24,23 +22,33 @@ public class OneToTripAPI {
     static private String answer;
     static private Gson gson;
 
-    public static void init(){
-        conn = new Connection();
+    static void init(){
+        conn = new Connection4DB();
         gson = new Gson();
 
         System.setProperty("ott_login","api@rgsbank");
         System.setProperty("ott_password","fhoouihfhoouih");
     }
 
-    static java.sql.Array array_wrapper(
-        String typeName,
-        Object elements
-    ) throws SQLException {
+    static OracleConnection getOracleConnection(){
+        oracle.jdbc.OracleDriver ora = new oracle.jdbc.OracleDriver();
+        java.sql.Connection conn = null;
+        try {
+            conn = ora.defaultConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return (oracle.jdbc.OracleConnection) conn;
+    }
+
+
+
+
+    static java.sql.Array array_wrapper(String typeName, Object elements) throws SQLException {
         oracle.jdbc.OracleDriver ora = new oracle.jdbc.OracleDriver();
         java.sql.Connection conn = ora.defaultConnection();
         oracle.jdbc.OracleConnection oraConn = (oracle.jdbc.OracleConnection)conn;
-        java.sql.Array arr = oraConn.createARRAY(typeName.toUpperCase(), elements);
-        return arr;
+        return oraConn.createARRAY(typeName.toUpperCase(), elements);
     }
 
     // Регистрация клиента
@@ -59,9 +67,11 @@ public class OneToTripAPI {
 
         try {
             conn.sendData(request);
+            System.out.println(conn.getResponseCode());
+            conn.initConnection("https://api.twiket.com/mt/registerUsers", "POST", System.getProperty("ott_login"), System.getProperty("ott_password"));
             answer = conn.getData();
         } catch (IOException ex) {
-            ex.printStackTrace();
+            System.out.println(ex.getMessage());
         }
         if (answer.length() > 0) {
             System.out.println(answer);
@@ -79,15 +89,15 @@ public class OneToTripAPI {
     }
 
     // Массовое начисление
-    public static java.sql.Array addFunds(java.sql.Array bonusToCharge) throws SQLException {
+    public static void addFunds(java.sql.Array bonusToCharge) throws SQLException {
         if (conn == null || gson ==null)
             init();
         conn.initConnection("https://api.twiket.com/mt/addFunds", "POST", System.getProperty("ott_login"), System.getProperty("ott_password"));
         BonusAddRequest charge = new  BonusAddRequest();
         String[] bonuses = (String[])bonusToCharge.getArray();
-        for (int i =0; i< bonuses.length; i++){
-            System.out.println("adding fund: " + bonuses[i]);
-            String[] recs = bonuses[i].split("#");
+        for (String bonuse : bonuses) {
+            System.out.println("adding fund: " + bonuse);
+            String[] recs = bonuse.split("#");
 
             BonusRequest bonus_req = new BonusRequest();
             bonus_req.setUid(recs[0]);
@@ -112,35 +122,29 @@ public class OneToTripAPI {
         }
         System.out.println("answer: " + answer);
         if (answer.length() >0){
-            String resp_str = "";
-            BonusAddResponce bonusResp = gson.fromJson(answer, BonusAddResponce.class);
-            ArrayList<String> resp_list = new ArrayList<String>();
-            for (BonusResponce resp : bonusResp.getBonuses()){
-                resp_str =  resp.getUid() + "#" + resp.getOperId() + "#" + (resp.getSuccess()?"SUCCESS":resp.getError());
-                System.out.println(resp_str);
-                resp_list.add(resp_str);
+            BonusAddResponce bonusAddResponce = gson.fromJson(answer, BonusAddResponce.class);
+
+            oracle.jdbc.OracleConnection oraConn = getOracleConnection();
+            if (oraConn != null){
+                try {
+                    CallableStatement callStm = oraConn.prepareCall("{call OTT_ADD_FUNDS_RESULT(?,?,?,?,?,?)}");
+                    int i;
+                    for (BonusResponce resp : bonusAddResponce.bonuses) {
+                        i = 1;
+                        callStm.setString(i++, resp.getUid());
+                        callStm.setFloat( i++, resp.getAmount());
+                        callStm.setString(i++, resp.getOperId());
+                        callStm.setString(i++, resp.getDesc());
+                        callStm.setInt(i++, resp.getSuccess()?1:0);
+                        callStm.setString(i++, resp.getError());
+
+                        callStm.execute();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
             }
-
-            String[] resp_arr = (String[])resp_list.toArray();
-
-            DriverManager.registerDriver (new oracle.jdbc.OracleDriver());
-            java.sql.Connection conn = DriverManager.getConnection("jdbc:oracle:thin:IBS/Pustobreh1937@//test03.msk.russb.org:1521/rbotest8.msk.russb.org");
-            oracle.jdbc.OracleConnection oraConn = (oracle.jdbc.OracleConnection)conn;
-
-            java.sql.Array arr = oraConn.createARRAY("OTT_BONUS_SERIAL".toUpperCase(), resp_arr);
-
-            return arr;
-//            System.out.println("uid: " + bonusResponse.getBonuses().get(0).getUid());
-//            System.out.println("success: " + bonusResponse.getBonuses().get(0).getSuccess());
-//            System.out.println("error: " + bonusResponse.getBonuses().get(0).getError());
-
-//            if (bonusResp.getSuccess())
-//                return "SUCCESS";
-//            else
-//                return bonusResp.getError();
         }
-
-        return null;
     }
 
     // Одинарное начисление
@@ -171,9 +175,8 @@ public class OneToTripAPI {
         }
         System.out.println("answer: " + answer);
         if (answer.length() >0){
-            String resp_str = "";
             BonusAddResponce bonusAddResp = gson.fromJson(answer, BonusAddResponce.class);
-            BonusResponce bonusResp = bonusAddResp.getBonuses().get(0);
+            BonusResponce bonusResp = bonusAddResp.bonuses.get(0);
 
             if (bonusResp.getSuccess())
                 return "SUCCESS";
@@ -184,5 +187,131 @@ public class OneToTripAPI {
             return null;
     }
 
+    // Получение бонусных бвижений
+    public static void newMovements(){
+        if (conn == null || gson ==null)
+            init();
+
+        conn.initConnection("https://api.twiket.com/mt/newMovements", "GET", System.getProperty("ott_login"), System.getProperty("ott_password"));
+        try {
+            answer = conn.getData();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("answer: " + answer);
+        if (answer.length() >0) {
+            BonusMovements bmoves = gson.fromJson(answer, BonusMovements.class);
+/*
+            oracle.jdbc.OracleDriver ora = new oracle.jdbc.OracleDriver();
+            java.sql.Connection conn = null;
+            try {
+                conn = ora.defaultConnection();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }*/
+            oracle.jdbc.OracleConnection oraConn = getOracleConnection();
+
+            /*
+             Функция ott_add_bonus_movements добавляет запись о бонусном движении в спрасовник бонусных движений
+             (или что-то в роде того) или сразу обрабатывает данные. Это буфферная зона, чтобы серверная логика оставалась
+             в plsql.
+             */
+            if (oraConn != null){
+                try {
+                    CallableStatement callStm = oraConn.prepareCall("{call ott_add_bonus_movements_p(?,?,?,?,?,?,?,?,?,?,?)}");
+
+                    for (BonusMovement bmove : bmoves.movements) {
+                        int i = 1;
+//                        callStm.registerOutParameter(1, Types.VARCHAR);
+
+                        callStm.setString(i++, bmove.getMovId());
+                        callStm.setString(i++, bmove.getUid());
+                        callStm.setString(i++, bmove.getType());
+                        callStm.setString(i++, bmove.getTs());
+                        callStm.setFloat( i++, bmove.getAmount());
+                        callStm.setString(i++, bmove.getDesc());
+                        callStm.setString(i++, bmove.getOrderId());
+                        callStm.setString(i++, bmove.getProd());
+                        callStm.setString(i++, bmove.getName());
+                        callStm.setString(i++, bmove.getEmail());
+                        callStm.setString(i++, bmove.getPhone());
+
+                        callStm.execute();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+
+        }
+
+//        return res;
+
+    }
+
+    public static void updateMovementsState(java.sql.Array updateStates) throws SQLException {
+        if (conn == null || gson ==null)
+            init();
+
+        conn.initConnection("https://api.twiket.com/mt/updateMovementsState", "POST", System.getProperty("ott_login"), System.getProperty("ott_password"));
+
+        BonusAck bonusAck = new BonusAck();
+        String[] updates = (String[])updateStates.getArray();
+
+        for (String update : updates) {
+            System.out.println("updateState: " + update);
+            String[] recs = update.split("#");
+
+            BonusStatusAck status = new BonusStatusAck();
+            status.setMovId(recs[0]);
+            status.setStatus(recs[1]);
+            status.setError(recs[2]);
+            bonusAck.movements.add(status);
+        }
+
+        request = gson.toJson(bonusAck, BonusAck.class);
+        System.out.println(request);
+        try {
+            conn.sendData(request);
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        try {
+            answer = conn.getData();
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        System.out.println("answer: " + answer);
+
+        if (answer.length() >0) {
+            bonusAck = gson.fromJson(answer, BonusAck.class);
+            /*
+            oracle.jdbc.OracleDriver ora = new oracle.jdbc.OracleDriver();
+            java.sql.Connection conn = null;
+            try {
+                conn = ora.defaultConnection();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }*/
+            oracle.jdbc.OracleConnection oraConn = getOracleConnection();
+            // запишем статус в таблицу бонусных движений
+            if (oraConn != null) {
+                try {
+                    CallableStatement callStm = oraConn.prepareCall("{call ott_bonus_ack_p(?,?,?)}");
+
+                    for (BonusStatusAck bsa : bonusAck.movements) {
+                        int i = 1;
+                        callStm.setString(i++, bsa.getMovId());
+                        callStm.setInt(i++, bsa.getSuccess()?1:0);
+                        callStm.setString(i++, bsa.getError());
+
+                        callStm.execute();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
 }

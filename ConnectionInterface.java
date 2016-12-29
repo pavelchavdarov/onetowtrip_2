@@ -16,4 +16,5 @@ interface ConnectionInterface{
   public HttpURLConnection initConnection(String pUrl, String pMethod, String pLogin, String pPassword);
   public int sendData(String pData) throws IOException;
   public String getData() throws IOException;
+  public String getResponseCode() throws IOException;
 }

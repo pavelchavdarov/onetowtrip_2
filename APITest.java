@@ -1,21 +1,29 @@
 package onetowtrip;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.sql.DriverManager;
 
 /**
  * Created by p.chavdarov on 26/12/2016.
  */
 public class APITest {
+    static void toConsole(String str){
+        System.out.println(str);
+    }
+
     public static void main(String[] args){
         OneToTripAPI.init();
 
-//        try {
-//        String uid = "1000000007";
-//            System.out.println(OneToTripAPI.registerUsers(uid));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+//      work
+        try {
+        String uid = "1000000009";
+            System.out.println(OneToTripAPI.registerUsers(uid));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
+//      ~work
 //        try {
 //            DriverManager.registerDriver (new oracle.jdbc.OracleDriver());
 //            java.sql.Connection conn = DriverManager.getConnection("jdbc:oracle:thin:IBS/Pustobreh1937@//test03.msk.russb.org:1521/rbotest8.msk.russb.org");
@@ -30,11 +38,21 @@ public class APITest {
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
-        try{
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//      work
+//        try{
+//            Date date = new Date();
+//            SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMddHHmmSSS");
+//            System.out.println(OneToTripAPI.addFund("1000000005",1000, sdf.format(date), "бонусы!"));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+
+//        try{
+//            OneToTripAPI.newMovements();
+//        }catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
 
 
