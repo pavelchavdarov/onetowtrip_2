@@ -323,7 +323,7 @@ public class OneToTripAPI {
 //    }
 
     // Массовое начисление с таблицами
-    public static ARRAY addFundsTab(java.sql.Array bonusToCharge) {
+    public static Array addFundsTab(java.sql.Array bonusToCharge) {
         Exception excp = null;
 
         if (iConn == null || gson ==null) init();
@@ -415,42 +415,80 @@ public class OneToTripAPI {
     }
 
     // Одинарное начисление
-    public static String addFund(String pUID, Integer pAmount, String pOperId, String pDesc) throws Exception {
+    public static Array addFund(String pUID, Integer pAmount, String pOperId, String pDesc) throws Exception {
         if (iConn == null || gson ==null)
             init();
-        iConn.initConnection("mt/addFunds", "POST");
-        BonusAddRequest charge = new  BonusAddRequest();
-        BonusRequest bonus_req = new BonusRequest();
-        bonus_req.setUid(pUID);
-        bonus_req.setAmount(pAmount);
-        bonus_req.setOperId(pOperId);
-        bonus_req.setDesc(pDesc);
-
-        charge.bonuses.add(bonus_req);
-
-        request = gson.toJson(charge, BonusAddRequest.class);
-        System.out.println(request);
-
-        String err = "EMPTY_RESULT";
         try {
+            BonusAddRequest charge = new  BonusAddRequest();
+            BonusRequest bonus_req = new BonusRequest();
+            bonus_req.setUid(pUID);
+            bonus_req.setAmount(pAmount);
+            bonus_req.setOperId(pOperId);
+            bonus_req.setDesc(pDesc);
+            charge.bonuses.add(bonus_req);
+
+            request = gson.toJson(charge, BonusAddRequest.class);
+            System.err.println(request);
+
+            iConn.initConnection("mt/addFunds", "POST");
             iConn.sendData(request);
             answer = iConn.getData();
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            err = ex.getMessage();
-        }
-        System.out.println("answer: " + answer);
-        if (answer.length() >0){
-            BonusAddResponce bonusAddResp = gson.fromJson(answer, BonusAddResponce.class);
-            BonusResponce bonusResp = bonusAddResp.bonuses.get(0);
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Попытка вернуть таблицу из одной записи с описанием возникшего исключения.
+            // Может быт это понадобится на стороне Ритейла...
+            // Если и это не получается, то возвращаем null
+            oracle.jdbc.OracleConnection oraConn = getOracleConnection();
+            STRUCT[] respsAsStructs = new STRUCT[1];
 
-            if (bonusResp.getSuccess())
-                return "SUCCESS";
-            else
-                return bonusResp.getError();
+            try {
+                StructDescriptor respTypeDesc = StructDescriptor.createDescriptor("OTT_BONUS_CHARGE", oraConn);
+                Object[] respFields = new Object[]{ "", 0, "", "", false, "", "", e.getMessage()};
+                STRUCT respStruct = new STRUCT(respTypeDesc, oraConn, respFields);
+                respsAsStructs[0] = respStruct;
+                ArrayDescriptor respArrayDesc = ArrayDescriptor.createDescriptor("OTT_BONUS_CHARGE_TAB", oraConn);
+                return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
+            } catch (SQLException e1) {
+                e1.printStackTrace();
+                return null;
+            }
         }
-        else
-            return err;
+
+        // если мы добрались сюда, значит получен штатный ответ от OTT
+        // для созранение ответа в файл трейса (ала дампа)
+        System.err.println("answer: " + answer);
+
+        BonusAddResponce bonusAddResp = gson.fromJson(answer, BonusAddResponce.class);
+        BonusResponce bonusResp = bonusAddResp.bonuses.get(0);
+
+        oracle.jdbc.OracleConnection oraConn = getOracleConnection();
+
+        try {
+            if (oraConn != null) {
+                // http://stackoverflow.com/questions/19892674/pass-array-from-java-to-plsql-stored-procedure
+                STRUCT[] respsAsStructs = new STRUCT[1];
+                StructDescriptor respTypeDesc = StructDescriptor.createDescriptor("OTT_BONUS_CHARGE", oraConn);
+
+                Object[] respFields = new Object[]{bonusResp.getUid(),
+                        bonusResp.getAmount(),
+                        bonusResp.getOperId(),
+                        bonusResp.getDesc(),
+                        bonusResp.getSuccess(),
+                        bonusResp.getError(),
+                        request,
+                        "" // нустое исключение
+                };
+                STRUCT respStruct = new STRUCT(respTypeDesc, oraConn, respFields);
+                respsAsStructs[0] = respStruct;
+
+                ArrayDescriptor respArrayDesc = ArrayDescriptor.createDescriptor("OTT_BONUS_CHARGE_TAB", oraConn);
+
+                return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
+            }
+        }catch(Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 
     // Получение бонусных бвижений
