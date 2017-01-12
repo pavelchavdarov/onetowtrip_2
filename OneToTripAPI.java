@@ -492,27 +492,21 @@ public class OneToTripAPI {
     }
 
     // Получение бонусных бвижений
-    public static void newMovements() throws Exception{
+    public static void newMovements(){
         if (iConn == null || gson ==null)
             init();
 
-        iConn.initConnection("mt/newMovements", "GET");
+
         try {
+            iConn.initConnection("mt/newMovements", "GET");
             answer = iConn.getData();
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
         System.out.println("answer: " + answer);
         if (answer.length() >0) {
             BonusMovements bmoves = gson.fromJson(answer, BonusMovements.class);
-/*
-            oracle.jdbc.OracleDriver ora = new oracle.jdbc.OracleDriver();
-            java.sql.Connection iConn = null;
-            try {
-                iConn = ora.defaultConnection();
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }*/
+
             oracle.jdbc.OracleConnection oraConn = getOracleConnection();
 
             /*
