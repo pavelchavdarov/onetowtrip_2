@@ -39,6 +39,10 @@ class UserRequest {
     private String email;
     private String phone;
 
+    public UserRequest(String uid) {
+        this.uid = uid;
+    }
+
     public String getUid() {
         return uid;
     }

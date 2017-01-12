@@ -13,8 +13,7 @@ import java.net.HttpURLConnection;
  * @author p.chavdarov
  */
 interface ConnectionInterface{
-  public HttpURLConnection initConnection(String pUrl, String pMethod, String pLogin, String pPassword);
+  public void initConnection(String pUri, String pMethod) throws Exception;
   public int sendData(String pData) throws IOException;
   public String getData() throws IOException;
-  public String getResponseCode() throws IOException;
 }

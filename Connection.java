@@ -31,54 +31,34 @@ import javax.net.ssl.HttpsURLConnection;
 
 public class Connection implements ConnectionInterface{
 
-    private HttpsURLConnection conn;
+    private HttpURLConnection conn;
     private Proxy proxy;
-    private String connMethod;
+    private String url_addr;
+    private String login;
+    private String password;
+    private String authString;
 
-    @Override
-    public HttpURLConnection initConnection(String pUrl, String pMethod, String pLogin, String pPassword){
-        URL url = null;
-        int res_code = 0;
-        String encoded = Base64.encodeBase64String((pLogin + ":" + pPassword).getBytes());
-
-        // пока заглушка
-        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.95.17.46", 8080));
-//        proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.95.5.19", 8888));
-        try{
-                url = new URL(pUrl);
-        }catch(MalformedURLException mx){
-                Logger.getLogger("https_conn").log(Level.SEVERE, null, mx);
-                res_code = 1;
-        }
-        try {
-            if (res_code == 0){
-                conn = (HttpsURLConnection) url.openConnection(proxy);
-                conn.setDoInput(true);
-                conn.setDoOutput(true);
-                conn.setUseCaches(false);
-                conn.setConnectTimeout(60000);
-                conn.setRequestMethod(pMethod);
-                conn.setRequestProperty("Content-Type", "application/json");
-                conn.setRequestProperty("Authorization", "Basic " + encoded);
-                conn.setRequestProperty("Cookie", "ENVID=dev-linode-03");
-                //conn.setRequestProperty("charset", "utf-8");
-            }
-            else
-                res_code = 1;
-        } catch (IOException ex){
-                Logger.getLogger("https_conn").log(Level.SEVERE, null, ex);
-                res_code = 1;
-        }
-        if (res_code == 0){
-            System.out.println("Connection done...");
-            return conn;
-        }
-        else
-            System.out.println("Connection error!!!");
-        return null;
+    public Connection(String pUrl, String pLogin, String pPassword, Proxy pProxy) {
+        this.url_addr = pUrl;
+        this.authString = Base64.encodeBase64String((pLogin + ":" + pPassword).getBytes());
+        this.proxy = pProxy;
     }
 
     @Override
+    public void initConnection(String pUri, String pMethod) throws Exception{
+        URL url = new URL(this.url_addr + pUri);
+        conn = (HttpURLConnection) url.openConnection(proxy);
+        conn.setDoInput(true);
+        conn.setDoOutput(true);
+        conn.setUseCaches(false);
+        conn.setConnectTimeout(60000);
+        conn.setRequestMethod(pMethod);
+        conn.setRequestProperty("Content-Type", "application/json");
+        conn.setRequestProperty("Authorization", "Basic " + this.authString);
+        conn.setRequestProperty("Cookie", "ENVID=dev-linode-03");
+        //return conn;
+    }
+
     public int sendData(String pData) throws IOException{
         if (conn == null)
             return 1;
@@ -87,43 +67,20 @@ public class Connection implements ConnectionInterface{
         wr.write(pData);
         wr.flush();
 
-        
-
-        return 0; //conn.getResponseCode();
-
-    } 
+        return 0;
+    }
   
-    @Override
     public String getData() throws IOException{
         String result="";
         String inputLine;
         
         if (conn != null) {
-            try{
-                InputStreamReader instrean = new InputStreamReader(conn.getInputStream());
-                BufferedReader in = new BufferedReader(instrean);
-                while ((inputLine = in.readLine()) != null) {
-                    result += inputLine;
-                }
-            } catch (IOException ex) {
-                System.out.println(ex);
-            }    
-           
+            InputStreamReader instrean = new InputStreamReader(conn.getInputStream());
+            BufferedReader in = new BufferedReader(instrean);
+            while ((inputLine = in.readLine()) != null) {
+                result += inputLine;
+            }
         }
         return result;
-    }
-    
-    public String getFile(String fileName) throws IOException{
-            
-        if (conn != null) {
-            ReadableByteChannel rbc = Channels.newChannel(conn.getInputStream());
-            FileOutputStream fos = new FileOutputStream(fileName);
-            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-        }
-        return fileName;
-    }
-
-    public String getResponseCode() throws IOException {
-        return String.valueOf(conn.getResponseCode());
     }
 }

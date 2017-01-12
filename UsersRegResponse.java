@@ -8,7 +8,7 @@ import java.util.List;
  */
 
 public class UsersRegResponse {
-    private List<UserResponce> users;
+    protected List<UserResponce> users;
 
     public UsersRegResponse(){
         users = new ArrayList<UserResponce>();
