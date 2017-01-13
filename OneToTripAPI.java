@@ -5,6 +5,7 @@
  */
 package onetowtrip;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
@@ -58,7 +59,9 @@ public class OneToTripAPI {
 
     // Регистрация клиента
 
-    public static Array registerUser(String uid){
+    public static String registerUser(String uid){
+        String result="";
+
         if (iConn == null)
             init();
         try {
@@ -75,6 +78,8 @@ public class OneToTripAPI {
             answer = iConn.getData();
         } catch (Exception e) {
             e.printStackTrace();
+            result = String4CFT.setPar(result,"OraException",e.getMessage());
+            /*
             // Попытка вернуть таблицу из одной записи с описанием возникшего исключения.
             // Может быт это понадобится на стороне Ритейла...
             // Если и это не получается, то возвращаем null
@@ -90,7 +95,8 @@ public class OneToTripAPI {
             } catch (SQLException e1) {
                 e1.printStackTrace();
                 return null;
-            }
+            }*/
+            return result;
         }
         // если мы добрались сюда, значит получен штатный ответ от OTT
         // для сохранения ответа в файл трейса (или дампа)
@@ -98,7 +104,13 @@ public class OneToTripAPI {
         UsersRegResponse regAnswer= gson.fromJson(answer, UsersRegResponse.class);
         // Т.к. запрос отправлялся только по одному клиенту, то и в ответе только одна запись
         UserResponce resp = regAnswer.users.get(0);
+        result = String4CFT.setPar(result,"uid", resp.getUid());
+        result = String4CFT.setPar(result,"success", String.valueOf(resp.getSuccess()));
+        result = String4CFT.setPar(result,"error", resp.getError());
+        result = String4CFT.setPar(result,"request", request);
 
+        return result;
+        /*
         oracle.jdbc.OracleConnection oraConn = getOracleConnection();
         try {
             if (oraConn != null) {
@@ -110,7 +122,7 @@ public class OneToTripAPI {
                         resp.getSuccess(),
                         resp.getError(),
                         request, // т.к. регистрируется один клиент, то можно подставить целиком request
-                        "" /* нустое исключение*/ };
+                        ""  };
                 STRUCT respStruct = new STRUCT(respTypeDesc, oraConn, respFields);
                 respsAsStructs[0] = respStruct;
 
@@ -121,7 +133,7 @@ public class OneToTripAPI {
         }catch(Exception e){
             e.printStackTrace();
         }
-        return null;
+        */
     }
 
     public static Array registerUsersStr(java.sql.Array usersToReg){
@@ -542,6 +554,80 @@ public class OneToTripAPI {
             }
 
         }
+
+//        return res;
+
+    }
+
+    public static Clob newMovementsStr(){
+        if (iConn == null || gson ==null)
+            init();
+        try {
+            iConn.initConnection("mt/newMovements", "GET");
+            answer = iConn.getData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            oracle.jdbc.OracleConnection oraConn = getOracleConnection();
+            Clob clobAnswer = null;
+            try {
+                clobAnswer = oraConn.createClob();
+                BufferedWriter wr = (BufferedWriter) clobAnswer.setCharacterStream(1);
+                wr.write(e.getMessage());
+            } catch (Exception e1) {
+                e1.printStackTrace();
+                return null;
+            }
+            return clobAnswer;
+        }
+        System.err.println("answer: " + answer);
+        BonusMovements bmoves = gson.fromJson(answer, BonusMovements.class);
+        oracle.jdbc.OracleConnection oraConn = getOracleConnection();
+        try {
+            Clob clobAnswer = oraConn.createClob();
+            BufferedWriter wr = (BufferedWriter) clobAnswer.setCharacterStream(1);
+            wr.write(answer);
+            return clobAnswer;
+        } catch (Exception e) {
+            if(e.getMessage().isEmpty())
+                System.err.println(e);
+            else
+                System.err.println(e.getMessage());
+            return null;
+        }
+            /*
+             Функция ott_add_bonus_movements добавляет запись о бонусном движении в спрасовник бонусных движений
+             (или что-то в роде того) или сразу обрабатывает данные. Это буфферная зона, чтобы серверная логика оставалась
+             в plsql.
+             */
+            /*
+            if (oraConn != null){
+                try {
+                    CallableStatement callStm = oraConn.prepareCall("{call ott_add_bonus_movements_p(?,?,?,?,?,?,?,?,?,?,?)}");
+
+                    for (BonusMovement bmove : bmoves.movements) {
+                        int i = 1;
+//                        callStm.registerOutParameter(1, Types.VARCHAR);
+
+                        callStm.setString(i++, bmove.getMovId());
+                        callStm.setString(i++, bmove.getUid());
+                        callStm.setString(i++, bmove.getType());
+                        callStm.setString(i++, bmove.getTs());
+                        callStm.setFloat( i++, bmove.getAmount());
+                        callStm.setString(i++, bmove.getDesc());
+                        callStm.setString(i++, bmove.getOrderId());
+                        callStm.setString(i++, bmove.getProd());
+                        callStm.setString(i++, bmove.getName());
+                        callStm.setString(i++, bmove.getEmail());
+                        callStm.setString(i++, bmove.getPhone());
+
+                        callStm.execute();
+                    }
+                } catch (SQLException e) {
+                    e.printStackTrace();
+                }
+            }*/
+
+
 
 //        return res;
 
