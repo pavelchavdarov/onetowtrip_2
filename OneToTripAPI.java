@@ -136,6 +136,56 @@ public class OneToTripAPI {
         */
     }
 
+    public static String registerUserRow(String uid){
+
+        if (iConn == null)
+            init();
+        try {
+            UsersRegRequest regRequest = new UsersRegRequest();
+            UserRequest ur = new UserRequest(uid);
+            regRequest.users.add(ur);
+
+            request = gson.toJson(regRequest, UsersRegRequest.class);
+            System.err.println("request: " + request);
+
+            iConn.initConnection("mt/registerUsers", "POST");
+            // отправка запроса и получение ответа
+            iConn.sendData(request);
+            answer = iConn.getData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+        }
+        // если мы добрались сюда, значит получен штатный ответ от OTT
+        System.err.println("answer: " + answer);
+        return answer;
+    }
+
+    public static String registerUsersRow(java.sql.Array usersToReg){
+        if (iConn == null || gson ==null) init();
+        try {
+            UsersRegRequest regRequest = new UsersRegRequest();
+            String[] users_str = (String[])usersToReg.getArray();
+            for (String usr : users_str) {
+                UserRequest user = new UserRequest(usr);
+                regRequest.users.add(user);
+            }
+            request = gson.toJson(regRequest, UsersRegRequest.class);
+            System.err.println("request: " + request);
+
+            iConn.initConnection("mt/registerUsers", "POST");
+            // отправка запроса и получение ответа
+            iConn.sendData(request);
+            answer = iConn.getData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+        }
+        // если мы добрались сюда, значит получен штатный ответ от OTT
+        System.err.println("answer: " + answer);
+        return answer;
+    }
+
     public static Array registerUsersStr(java.sql.Array usersToReg){
         if (iConn == null || gson ==null) init();
         try {
@@ -333,6 +383,41 @@ public class OneToTripAPI {
 //            }
 //        }
 //    }
+
+    // Массовое начисление с таблицами
+    public static String addFundsRow(java.sql.Array bonusToCharge) {
+
+        if (iConn == null || gson ==null) init();
+        try {
+            // формирование json-запроса
+            BonusAddRequest charge = new  BonusAddRequest();
+            Object[] bonuses_obj = (Object[])bonusToCharge.getArray();
+            for (Object obj : bonuses_obj) {
+                Object[] bonus_reqs = ((java.sql.Struct)obj).getAttributes();
+                BonusRequest bonus = new BonusRequest();
+
+                bonus.setUid((String)bonus_reqs[0]);
+                bonus.setAmount(((java.math.BigDecimal)bonus_reqs[1]).intValue());
+                bonus.setOperId((String)bonus_reqs[2]);
+                bonus.setDesc((String)bonus_reqs[3]);
+                charge.bonuses.add(bonus);
+            }
+            request = gson.toJson(charge, BonusAddRequest.class);
+            System.err.println("request: " + request);
+
+            iConn.initConnection("mt/addFunds", "POST");
+            // отправка запроса и получение ответа
+            iConn.sendData(request);
+            answer = iConn.getData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+
+        }
+        // если мы добрались сюда, значит получен штатный ответ от OTT
+        System.err.println("answer: " + answer);
+        return answer;
+    }
 
     // Массовое начисление с таблицами
     public static Array addFundsTab(java.sql.Array bonusToCharge) {
@@ -559,6 +644,21 @@ public class OneToTripAPI {
 
     }
 
+    public static String newMovementsRow(){
+        if (iConn == null || gson ==null)
+            init();
+        try {
+            iConn.initConnection("mt/newMovements", "GET");
+            answer = iConn.getData();
+        } catch (Exception e) {
+            e.printStackTrace();
+            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+        }
+        System.out.println("answer: " + answer);
+        return answer;
+
+    }
+
     public static Clob newMovementsStr(){
         if (iConn == null || gson ==null)
             init();
@@ -631,6 +731,36 @@ public class OneToTripAPI {
 
 //        return res;
 
+    }
+
+    public static void updateMovementsStateRow(java.sql.Array updateStates) {
+        if (iConn == null || gson ==null) init();
+
+        try{
+            BonusAck bonusAck = new BonusAck();
+            String[] updates = (String[])updateStates.getArray();
+
+            for (String update : updates) {
+                Object[] recs = ((java.sql.Struct)update).getAttributes();
+
+                BonusStatusAck status = new BonusStatusAck();
+                status.setMovId((String)recs[0]);
+                status.setStatus((String)recs[1]);
+                status.setError((String)recs[2]);
+                bonusAck.movements.add(status);
+            }
+
+            request = gson.toJson(bonusAck, BonusAck.class);
+            System.out.println(request);
+            iConn.initConnection("mt/updateMovementsState", "POST");
+            iConn.sendData(request);
+            answer = iConn.getData();
+        } catch (IOException e) {
+                e.printStackTrace();
+                answer = String4CFT.setPar(result,"OraException",e.getMessage());
+        }
+        System.out.println("answer: " + answer);
+        return answer;
     }
 
     public static void updateMovementsState(java.sql.Array updateStates) throws Exception {
