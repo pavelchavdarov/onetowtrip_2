@@ -15,13 +15,12 @@ public class APITest {
     public static void main(String[] args){
         OneToTripAPI.init();
 
-//      work
-//        try {
-//            String uid = "1000000010";
-//            System.out.println(OneToTripAPI.registerUsers(uid));
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
+        try {
+            String uid = "1000000001";
+            System.out.println(OneToTripAPI.registerUser(uid));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
 //      ~work
 //        try {
@@ -42,13 +41,13 @@ public class APITest {
 //        }
 
 //      work
-        try{
-            Date date = new Date();
-            SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMddHHmmSSS");
-            System.out.println(OneToTripAPI.addFund("1000000001",1, sdf.format(date), "бонусы!"));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        try{
+//            Date date = new Date();
+//            SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMddHHmmSSS");
+//            System.out.println(OneToTripAPI.addFundRow("1000000001",1, sdf.format(date), "бонусы!"));
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
 //        try{
 //            OneToTripAPI.newMovements();

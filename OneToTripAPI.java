@@ -7,13 +7,9 @@ package onetowtrip;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.net.Proxy;
 import java.sql.*;
 import java.net.InetSocketAddress;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.google.gson.Gson;
 import oracle.jdbc.OracleConnection;
@@ -45,7 +41,7 @@ public class OneToTripAPI {
             oracle.jdbc.OracleDriver ora = new oracle.jdbc.OracleDriver();
             return (oracle.jdbc.OracleConnection) ora.defaultConnection();
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             return null;
         }
     }
@@ -77,7 +73,7 @@ public class OneToTripAPI {
             iConn.sendData(request);
             answer = iConn.getData();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             result = String4CFT.setPar(result,"OraException",e.getMessage());
             /*
             // Попытка вернуть таблицу из одной записи с описанием возникшего исключения.
@@ -140,6 +136,8 @@ public class OneToTripAPI {
 
         if (iConn == null)
             init();
+        answer = "";
+        String result = "";
         try {
             UsersRegRequest regRequest = new UsersRegRequest();
             UserRequest ur = new UserRequest(uid);
@@ -152,17 +150,22 @@ public class OneToTripAPI {
             // отправка запроса и получение ответа
             iConn.sendData(request);
             answer = iConn.getData();
+            System.err.println("answer: " + answer);
+            result = String4CFT.setPar(result,"request",request);
+            result = String4CFT.setPar(result,"answer",answer);
         } catch (Exception e) {
-            e.printStackTrace();
-            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+            System.err.println(e.getMessage());
+            result = String4CFT.setPar(result,"OraException",e.getMessage());
         }
         // если мы добрались сюда, значит получен штатный ответ от OTT
-        System.err.println("answer: " + answer);
-        return answer;
+
+        return result;
     }
 
     public static String registerUsersRow(java.sql.Array usersToReg){
         if (iConn == null || gson ==null) init();
+        answer = "";
+        String result = "";
         try {
             UsersRegRequest regRequest = new UsersRegRequest();
             String[] users_str = (String[])usersToReg.getArray();
@@ -177,13 +180,17 @@ public class OneToTripAPI {
             // отправка запроса и получение ответа
             iConn.sendData(request);
             answer = iConn.getData();
+            System.err.println("answer: " + answer);
+            result = String4CFT.setPar(result,"request",request);
+            result = String4CFT.setPar(result,"answer",answer);
+
         } catch (Exception e) {
-            e.printStackTrace();
-            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+            System.err.println(e.getMessage());
+            result = String4CFT.setPar(result,"OraException",e.getMessage());
         }
         // если мы добрались сюда, значит получен штатный ответ от OTT
-        System.err.println("answer: " + answer);
-        return answer;
+
+        return result;
     }
 
     public static Array registerUsersStr(java.sql.Array usersToReg){
@@ -203,7 +210,7 @@ public class OneToTripAPI {
             iConn.sendData(request);
             answer = iConn.getData();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             // Попытка вернуть таблицу из одной записи с описанием возникшего исключения.
             // Может быт это понадобится на стороне Ритейла...
             // Если и это не получается, то возвращаем null
@@ -217,7 +224,7 @@ public class OneToTripAPI {
                 ArrayDescriptor respArrayDesc = ArrayDescriptor.createDescriptor("OTT_USER_REG_TAB", oraConn);
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                System.err.println(e1.getMessage());
                 return null;
             }
         }
@@ -250,7 +257,7 @@ public class OneToTripAPI {
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             }
         }catch(Exception e){
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
         return null;
     }
@@ -274,7 +281,7 @@ public class OneToTripAPI {
             iConn.sendData(request);
             answer = iConn.getData();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             // Попытка вернуть таблицу из одной записи с описанием возникшего исключения.
             // Может быт это понадобится на стороне Ритейла...
             // Если и это не получается, то возвращаем null
@@ -288,7 +295,7 @@ public class OneToTripAPI {
                 ArrayDescriptor respArrayDesc = ArrayDescriptor.createDescriptor("OTT_USER_REG_TAB", oraConn);
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                System.err.println(e1.getMessage());
                 return null;
             }
         }
@@ -321,7 +328,7 @@ public class OneToTripAPI {
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             }
         }catch(Exception e){
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
         return null;
     }
@@ -388,6 +395,8 @@ public class OneToTripAPI {
     public static String addFundsRow(java.sql.Array bonusToCharge) {
 
         if (iConn == null || gson ==null) init();
+        answer = "";
+        String result = "";
         try {
             // формирование json-запроса
             BonusAddRequest charge = new  BonusAddRequest();
@@ -409,14 +418,17 @@ public class OneToTripAPI {
             // отправка запроса и получение ответа
             iConn.sendData(request);
             answer = iConn.getData();
+            System.err.println("answer: " + answer);
+            result = String4CFT.setPar(result,"request",request);
+            result = String4CFT.setPar(result,"answer",answer);
         } catch (Exception e) {
-            e.printStackTrace();
-            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+            System.err.println(e.getMessage());
+            result = String4CFT.setPar(result,"OraException",e.getMessage());
 
         }
         // если мы добрались сюда, значит получен штатный ответ от OTT
-        System.err.println("answer: " + answer);
-        return answer;
+
+        return result;
     }
 
     // Массовое начисление с таблицами
@@ -450,7 +462,7 @@ public class OneToTripAPI {
             iConn.sendData(request);
             answer = iConn.getData();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             // Попытка вернуть таблицу из одной записи с описанием возникшего исключения.
             // Может быт это понадобится на стороне Ритейла...
             // Если и это не получается, то возвращаем null
@@ -465,7 +477,7 @@ public class OneToTripAPI {
                 ArrayDescriptor respArrayDesc = ArrayDescriptor.createDescriptor("OTT_BONUS_CHARGE_TAB", oraConn);
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                System.err.println(e1.getMessage());
                 return null;
             }
 
@@ -506,12 +518,44 @@ public class OneToTripAPI {
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             }
         }catch(Exception e){
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
         return null;
     }
 
     // Одинарное начисление
+    public static String addFundRow(String pUID, Integer pAmount, String pOperId, String pDesc) throws Exception {
+        if (iConn == null || gson ==null) init();
+        answer = "";
+        String result= "";
+        try {
+            BonusAddRequest charge = new  BonusAddRequest();
+            BonusRequest bonus_req = new BonusRequest();
+            bonus_req.setUid(pUID);
+            bonus_req.setAmount(pAmount);
+            bonus_req.setOperId(pOperId);
+            bonus_req.setDesc(pDesc);
+            charge.bonuses.add(bonus_req);
+
+            request = gson.toJson(charge, BonusAddRequest.class);
+            System.err.println(request);
+
+            iConn.initConnection("mt/addFunds", "POST");
+            iConn.sendData(request);
+            answer = iConn.getData();
+
+            System.err.println("answer: " + answer);
+            result = String4CFT.setPar(result,"request",request);
+            result = String4CFT.setPar(result,"answer",answer);
+        } catch (IOException e) {
+            System.err.println(e.getMessage());
+            result = String4CFT.setPar(result,"OraException",e.getMessage());
+        }
+
+        return result;
+    }
+
+
     public static Array addFund(String pUID, Integer pAmount, String pOperId, String pDesc) throws Exception {
         if (iConn == null || gson ==null)
             init();
@@ -531,7 +575,7 @@ public class OneToTripAPI {
             iConn.sendData(request);
             answer = iConn.getData();
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             // Попытка вернуть таблицу из одной записи с описанием возникшего исключения.
             // Может быт это понадобится на стороне Ритейла...
             // Если и это не получается, то возвращаем null
@@ -546,7 +590,7 @@ public class OneToTripAPI {
                 ArrayDescriptor respArrayDesc = ArrayDescriptor.createDescriptor("OTT_BONUS_CHARGE_TAB", oraConn);
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             } catch (SQLException e1) {
-                e1.printStackTrace();
+                System.err.println(e1.getMessage());
                 return null;
             }
         }
@@ -583,7 +627,7 @@ public class OneToTripAPI {
                 return new ARRAY(respArrayDesc, oraConn, respsAsStructs);
             }
         }catch(Exception e){
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
         return null;
     }
@@ -598,7 +642,7 @@ public class OneToTripAPI {
             iConn.initConnection("mt/newMovements", "GET");
             answer = iConn.getData();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
         }
         System.out.println("answer: " + answer);
         if (answer.length() >0) {
@@ -634,7 +678,7 @@ public class OneToTripAPI {
                         callStm.execute();
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    System.err.println(e.getMessage());
                 }
             }
 
@@ -645,14 +689,14 @@ public class OneToTripAPI {
     }
 
     public static String newMovementsRow(){
-        if (iConn == null || gson ==null)
-            init();
+        if (iConn == null || gson ==null) init();
+        answer = "";
         try {
             iConn.initConnection("mt/newMovements", "GET");
             answer = iConn.getData();
         } catch (Exception e) {
-            e.printStackTrace();
-            answer = String4CFT.setPar(result,"OraException",e.getMessage());
+            System.err.println(e.getMessage());
+            answer = String4CFT.setPar(answer,"OraException",e.getMessage());
         }
         System.out.println("answer: " + answer);
         return answer;
@@ -666,7 +710,7 @@ public class OneToTripAPI {
             iConn.initConnection("mt/newMovements", "GET");
             answer = iConn.getData();
         } catch (Exception e) {
-            e.printStackTrace();
+            System.err.println(e.getMessage());
             oracle.jdbc.OracleConnection oraConn = getOracleConnection();
             Clob clobAnswer = null;
             try {
@@ -674,13 +718,13 @@ public class OneToTripAPI {
                 BufferedWriter wr = (BufferedWriter) clobAnswer.setCharacterStream(1);
                 wr.write(e.getMessage());
             } catch (Exception e1) {
-                e1.printStackTrace();
+                System.err.println(e1.getMessage());
                 return null;
             }
             return clobAnswer;
         }
         System.err.println("answer: " + answer);
-        BonusMovements bmoves = gson.fromJson(answer, BonusMovements.class);
+//        BonusMovements bmoves = gson.fromJson(answer, BonusMovements.class);
         oracle.jdbc.OracleConnection oraConn = getOracleConnection();
         try {
             Clob clobAnswer = oraConn.createClob();
@@ -733,14 +777,15 @@ public class OneToTripAPI {
 
     }
 
-    public static void updateMovementsStateRow(java.sql.Array updateStates) {
+    public static String updateMovementsStateRow(java.sql.Array updateStates) {
         if (iConn == null || gson ==null) init();
-
+        answer = "";
+        String result ="";
         try{
             BonusAck bonusAck = new BonusAck();
-            String[] updates = (String[])updateStates.getArray();
+            Object[] updates = (Object[])updateStates.getArray();
 
-            for (String update : updates) {
+            for (Object update : updates) {
                 Object[] recs = ((java.sql.Struct)update).getAttributes();
 
                 BonusStatusAck status = new BonusStatusAck();
@@ -751,16 +796,19 @@ public class OneToTripAPI {
             }
 
             request = gson.toJson(bonusAck, BonusAck.class);
-            System.out.println(request);
+            System.err.println(request);
             iConn.initConnection("mt/updateMovementsState", "POST");
             iConn.sendData(request);
             answer = iConn.getData();
-        } catch (IOException e) {
-                e.printStackTrace();
-                answer = String4CFT.setPar(result,"OraException",e.getMessage());
+            System.out.println("answer: " + answer);
+            result = String4CFT.setPar(result,"request",request);
+            result = String4CFT.setPar(result,"answer",answer);
+        } catch (Exception e) {
+            System.err.println(e.getMessage());
+            result = String4CFT.setPar(result,"OraException",e.getMessage());
         }
-        System.out.println("answer: " + answer);
-        return answer;
+
+        return result;
     }
 
     public static void updateMovementsState(java.sql.Array updateStates) throws Exception {
@@ -788,12 +836,12 @@ public class OneToTripAPI {
         try {
             iConn.sendData(request);
         } catch (IOException ex) {
-            ex.printStackTrace();
+            System.err.println(ex.getMessage());
         }
         try {
             answer = iConn.getData();
         } catch (IOException ex) {
-            ex.printStackTrace();
+            System.err.println(ex.getMessage());
         }
         System.out.println("answer: " + answer);
 
@@ -822,7 +870,7 @@ public class OneToTripAPI {
                         callStm.execute();
                     }
                 } catch (SQLException e) {
-                    e.printStackTrace();
+                    System.err.println(e.getMessage());
                 }
             }
         }
