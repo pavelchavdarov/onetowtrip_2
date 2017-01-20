@@ -55,7 +55,7 @@ public class Connection implements ConnectionInterface{
         conn.setRequestMethod(pMethod);
         conn.setRequestProperty("Content-Type", "application/json");
         conn.setRequestProperty("Authorization", "Basic " + this.authString);
-        //conn.setRequestProperty("Cookie", "ENVID=dev-linode-03");
+        //conn.setRequestProperty("Cookie", "ENVID=dev-linode-03"); // для теста
         //return conn;
     }
 
@@ -73,7 +73,7 @@ public class Connection implements ConnectionInterface{
     public String getData() throws IOException{
         String result="";
         String inputLine;
-        
+
         if (conn != null) {
             InputStreamReader instrean = new InputStreamReader(conn.getInputStream());
             BufferedReader in = new BufferedReader(instrean);

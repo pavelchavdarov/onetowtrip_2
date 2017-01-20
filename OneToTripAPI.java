@@ -31,7 +31,7 @@ public class OneToTripAPI {
 
     static void init(){
         iConn = new Connection(  "http://api.twiket.com/",
-                                "api@rgs", "fhoouihfhoouih",
+                                "api@rgs", "IQWQUsHg", // fhoouihfhoouih -- тестовый
                                 new Proxy(Proxy.Type.HTTP, new InetSocketAddress("10.95.5.19",8888)));
         gson = new Gson();
     }

@@ -16,8 +16,8 @@ public class APITest {
         OneToTripAPI.init();
 
         try {
-            String uid = "1000000001";
-            System.out.println(OneToTripAPI.registerUser(uid));
+            String uid = "1000000007";
+            System.out.println(OneToTripAPI.registerUserRow(uid));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -44,7 +44,7 @@ public class APITest {
 //        try{
 //            Date date = new Date();
 //            SimpleDateFormat sdf= new SimpleDateFormat("yyyyMMddHHmmSSS");
-//            System.out.println(OneToTripAPI.addFundRow("1000000001",1, sdf.format(date), "бонусы!"));
+//            System.out.println(OneToTripAPI.addFundRow("1000000003",505, sdf.format(date), "Приветственный бонус"));
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
